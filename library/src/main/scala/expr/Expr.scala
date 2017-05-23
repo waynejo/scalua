@@ -24,7 +24,7 @@ case class SDExprIF(condition: BoolValue, ifTrue: LuaStatement, ifFalse: LuaStat
 case class SDExprAssign[T <: SDType](variable: SDExprVariable[T], expr: LuaExpr[T]) extends LuaStatement
 case class SDComposedStatement(one: LuaStatement, another: LuaStatement) extends LuaStatement
 case class SDExprReturn[R <: SDType](value: LuaExpr[R]) extends LuaStatement
-case class SDExprJust[R <: SDType](value: SDExprFuncCall[R]) extends LuaStatement
+case class SDExprJust[R <: SDType](value: LuaExpr[R]) extends LuaStatement
 
 sealed trait LuaFunction {
     def name(): String

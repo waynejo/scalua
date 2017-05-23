@@ -29,7 +29,7 @@ object LuaPrinter {
                     case SDExprIF(condition: BoolValue, ifTrue: LuaStatement, ifFalse: LuaStatement) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}else\n${addIndent(print(ifFalse))}end\n"
                     case SDExprAssign(variable:SDExprVariable[SDType], expr:LuaExpr[T]) => s"${print(variable)} = ${print(expr)}\n"
                     case SDExprReturn(value) => s"return ${print(value)}\n"
-                    case SDExprJust(value: SDExprFuncCall[T]) => print(value)
+                    case SDExprJust(value: LuaExpr[T]) => print(value)
                     case SDFunction0(name:String, body:LuaStatement) => s"function $name()\n${addIndent(print(body))}end\n"
                     case SDFunction1(name:String, result:SDExprReturn[SDType]) => s"function $name()\n${addIndent(print(result))}end\n"
                     case _ => "Error : " + luaExpr
