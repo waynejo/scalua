@@ -12,7 +12,7 @@ class LuaDemoExprTest extends FunSuite {
             if (bool(true) && bool(true)) {
                 SDExprJust(bool(true))
             }
-        ).asInstanceOf[LuaExpr[Any]]) ==
+        )) ==
             """if true and true then
               |    true
               |end
@@ -26,7 +26,7 @@ class LuaDemoExprTest extends FunSuite {
             } else {
                 SDExprJust(bool(false))
             }
-        ).asInstanceOf[LuaExpr[Any]]) ==
+        )) ==
             """if true and true then
               |    true
               |else
@@ -42,7 +42,7 @@ class LuaDemoExprTest extends FunSuite {
                     SDExprJust(bool(true))
                 }
             }
-        ).asInstanceOf[LuaExpr[Any]]) ==
+        )) ==
             """if true and true then
               |    if false then
               |        true

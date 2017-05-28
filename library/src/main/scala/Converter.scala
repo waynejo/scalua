@@ -1,11 +1,12 @@
+import expr.LuaExpr
 
 object Converter {
     import scala.language.experimental.macros
     import scala.reflect.macros.whitebox.Context
 
-    def convert[T](code: T): Any = macro convertMacro[T]
+    def convert[T](code: T): LuaExpr[Any] = macro convertMacro[LuaExpr[Any]]
 
-    def convertMacro[T: c.WeakTypeTag](c: Context)(code: c.Expr[Any]): c.Expr[Any] = {
+    def convertMacro[T: c.WeakTypeTag](c: Context)(code: c.Expr[Any]): c.Expr[LuaExpr[Any]] = {
         import c.universe._
 
         def convertCode(code: c.universe.Tree): c.universe.Tree = {
@@ -26,6 +27,6 @@ object Converter {
         val result = code match {
             case Expr(expr) => convertCode(expr)
         }
-        c.Expr(result)
+        c.Expr[LuaExpr[Any]](result)
     }
 }
