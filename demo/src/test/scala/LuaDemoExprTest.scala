@@ -1,8 +1,9 @@
 import expr.element._
 import org.scalatest._
 import expr._
+import expr.element.LuaOperatorImplicits._
+import expr.element.LuaOperatorImplicits.BoolImplicits._
 import expr.SDExprJust
-import expr.element.core.SDValue
 
 class LuaDemoExprTest extends FunSuite {
 
@@ -11,7 +12,7 @@ class LuaDemoExprTest extends FunSuite {
             if (bool(true) && bool(true)) {
                 SDExprJust(bool(true))
             }
-        ).asInstanceOf[SDValue]) ==
+        ).asInstanceOf[LuaExpr[Any]]) ==
             """if true and true then
               |    true
               |end
@@ -25,7 +26,7 @@ class LuaDemoExprTest extends FunSuite {
             } else {
                 SDExprJust(bool(false))
             }
-        ).asInstanceOf[SDValue]) ==
+        ).asInstanceOf[LuaExpr[Any]]) ==
             """if true and true then
               |    true
               |else
@@ -41,7 +42,7 @@ class LuaDemoExprTest extends FunSuite {
                     SDExprJust(bool(true))
                 }
             }
-        ).asInstanceOf[SDValue]) ==
+        ).asInstanceOf[LuaExpr[Any]]) ==
             """if true and true then
               |    if false then
               |        true
