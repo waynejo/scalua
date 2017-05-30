@@ -1,5 +1,6 @@
 import expr._
-import expr.element.core.SDType
+import expr.element.Var
+import expr.element.core.{SDType, Unit}
 
 object LuaPrinter {
 
@@ -26,11 +27,14 @@ object LuaPrinter {
             case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaStatement, ifFalse: SDNone) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}end\n"
             case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaStatement, ifFalse: SDExprIF) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}else${print(ifFalse)}\n"
             case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaStatement, ifFalse: LuaStatement) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}else\n${addIndent(print(ifFalse))}end\n"
-            case SDExprAssign(variable:SDExprVariable[SDType], expr:LuaExpr[T]) => s"${print(variable)} = ${print(expr)}\n"
+            case SDExprAssign(variable:SDExprVariable[SDType], expr:LuaExpr[_]) => s"${print(variable)} = ${print(expr)}\n"
             case SDExprReturn(value) => s"return ${print(value)}\n"
-            case SDExprJust(value: LuaExpr[T]) => print(value)
+            case SDExprJust(value: LuaExpr[_]) => print(value)
+            case SDExprValDef(name: String) => s"local $name\n"
+            case SDExprBlock(value: List[LuaExpr[Unit]]) => value.map(print).mkString("")
             case SDFunction0(name:String, body:LuaStatement) => s"function $name()\n${addIndent(print(body))}end\n"
             case SDFunction1(name:String, result:SDExprReturn[SDType]) => s"function $name()\n${addIndent(print(result))}end\n"
+            case value: Var[_] => value.name
             case _ => "Error : " + expr
         }
     }

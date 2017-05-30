@@ -50,4 +50,16 @@ class LuaDemoExprTest extends FunSuite {
               |end
               |""".stripMargin)
     }
+
+    test("multiline statement and Variable") {
+        assert(LuaPrinter.print(Converter.convert{
+            val value = Var[double]()
+            value := double(1.0)
+            value := double(2.0) + double(3.0) + value
+        }) ==
+            """local value
+              |value = 1.0
+              |value = 2.0 + 3.0 + value
+              |""".stripMargin)
+    }
 }

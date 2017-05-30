@@ -28,6 +28,8 @@ case class SDExprAssign[T <: SDType](variable: SDExprVariable[T], expr: LuaExpr[
 case class SDComposedStatement(one: LuaStatement, another: LuaStatement) extends LuaStatement
 case class SDExprReturn[R <: SDType](value: LuaExpr[R]) extends LuaStatement
 case class SDExprJust[R <: SDType](value: LuaExpr[R]) extends LuaStatement
+case class SDExprValDef[R <: SDType](name: String) extends LuaStatement
+case class SDExprBlock(value: List[LuaExpr[Unit]]) extends LuaStatement
 
 sealed trait LuaFunction {
     def name(): String
