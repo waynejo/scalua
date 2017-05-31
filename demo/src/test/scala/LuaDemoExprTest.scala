@@ -10,7 +10,7 @@ class LuaDemoExprTest extends FunSuite {
     test("if statement") {
         assert(LuaPrinter.print(Converter.convert(
             if (bool(true) && bool(true)) {
-                SDExprJust(bool(true))
+                bool(true)
             }
         )) ==
             """if true and true then
@@ -22,9 +22,9 @@ class LuaDemoExprTest extends FunSuite {
     test("if else statement") {
         assert(LuaPrinter.print(Converter.convert(
             if (bool(true) && bool(true)) {
-                SDExprJust(bool(true))
+                bool(true)
             } else {
-                SDExprJust(bool(false))
+                bool(false)
             }
         )) ==
             """if true and true then
@@ -39,7 +39,7 @@ class LuaDemoExprTest extends FunSuite {
         assert(LuaPrinter.print(Converter.convert(
             if (bool(true) && bool(true)) {
                 if (bool(false)) {
-                    SDExprJust(bool(true))
+                    bool(true)
                 }
             }
         )) ==

@@ -23,10 +23,9 @@ case class SDExprFuncCall[T <: SDType](value: LuaFunction, args: Vector[LuaExpr[
 sealed trait LuaStatement extends LuaExpr[Unit]
 
 case class SDNone() extends LuaStatement
-case class SDExprIF(condition: LuaExpr[bool], ifTrue: LuaStatement, ifFalse: LuaStatement = SDNone()) extends LuaStatement
+case class SDExprIF(condition: LuaExpr[bool], ifTrue: LuaExpr[SDType], ifFalse: LuaExpr[SDType] = SDNone()) extends LuaStatement
 case class SDExprAssign[T <: SDType](variable: SDExprVariable[T], expr: LuaExpr[T]) extends LuaStatement
-case class SDComposedStatement(one: LuaStatement, another: LuaStatement) extends LuaStatement
-case class SDExprReturn[R <: SDType](value: LuaExpr[R]) extends LuaStatement
+case class SDExprReturn[T <: SDType](value: LuaExpr[T]) extends LuaStatement
 case class SDExprJust[T <: SDType](value: LuaExpr[T]) extends LuaStatement
 case class SDExprValDef(name: String) extends LuaStatement
 case class SDExprBlock(value: List[LuaExpr[SDType]]) extends LuaStatement
