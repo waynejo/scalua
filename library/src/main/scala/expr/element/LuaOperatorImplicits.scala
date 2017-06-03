@@ -27,7 +27,14 @@ object LuaOperatorImplicits {
         def unary_!(): LuaExpr[bool] = SDExprNot(one)
     }
 
-    object BoolImplicits {
-        implicit def BoolValue2bool(x: LuaExpr[bool]): Boolean = true
+    case object implicitBool extends bool
+    case object implicitDouble extends double
+    case object implicitString extends string
+
+    object ExprImplicits {
+        implicit def bool2Bool(x: LuaExpr[bool]): Boolean = true
+        implicit def expr2bool(x: LuaExpr[bool]): bool = implicitBool
+        implicit def expr2double(x: LuaExpr[double]): double = implicitDouble
+        implicit def expr2string(x: LuaExpr[string]): string = implicitString
     }
 }

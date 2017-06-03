@@ -2,7 +2,7 @@ import expr.element._
 import org.scalatest._
 import expr._
 import expr.element.LuaOperatorImplicits._
-import expr.element.LuaOperatorImplicits.BoolImplicits._
+import expr.element.LuaOperatorImplicits.ExprImplicits._
 import expr.SDExprJust
 
 class LuaDemoExprTest extends FunSuite {
@@ -16,7 +16,7 @@ class LuaDemoExprTest extends FunSuite {
             """if true and true then
               |    true
               |end
-              |""".stripMargin)
+              |""".stripMargin.replace("\r\n", "\n"))
     }
 
     test("if else statement") {
@@ -32,7 +32,7 @@ class LuaDemoExprTest extends FunSuite {
               |else
               |    false
               |end
-              |""".stripMargin)
+              |""".stripMargin.replace("\r\n", "\n"))
     }
 
     test("nested if statement") {
@@ -48,7 +48,7 @@ class LuaDemoExprTest extends FunSuite {
               |        true
               |    end
               |end
-              |""".stripMargin)
+              |""".stripMargin.replace("\r\n", "\n"))
     }
 
     test("multiline statement and Variable") {
@@ -60,6 +60,19 @@ class LuaDemoExprTest extends FunSuite {
             """local value
               |value = 1.0
               |value = 2.0 + 3.0 + value
-              |""".stripMargin)
+              |""".stripMargin.replace("\r\n", "\n"))
+    }
+
+    test("define Function") {
+        assert(LuaPrinter.print(Converter.convert{
+            def myCustomFunc(a: double, b: double): double = {
+                double(0.0)
+            }
+            double(0)
+        }) ==
+            """function myCustomFunc(a, b)
+              |    return 0.0
+              |end
+              |0.0""".stripMargin.replace("\r\n", "\n"))
     }
 }
