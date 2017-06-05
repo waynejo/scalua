@@ -38,7 +38,17 @@ object Converter {
                         }
                     }).mkString
                     val argNum = vparamss.headOption.map(_.length).getOrElse(0)
-                    val codeString = s"val $name = SDFunction$argNum[$functionArgTypes]($functionArgNames, ${convertCode(rhs)._1})"
+                    val argVariables = vparamss.flatMap(x => {
+                        x.map { case ValDef(_, TermName(paramName), paramTpt: Tree, _)  =>
+                            s"val $paramName = SDExprVariable[${showCode(paramTpt)}](" + "\"" + paramName + "\")\n"
+                        }
+                    }).mkString
+                    val convertedCode = convertCode(rhs)._1
+                    val returnCode = convertedCode match {
+                        case exprTree @ Apply(Ident(TermName("SDExprReturn")), _) => exprTree.toString()
+                        case exprTree => s"SDExprReturn($exprTree)"
+                    }
+                    val codeString = s"val $name = SDFunction$argNum[$functionArgTypes]($functionArgNames, {\n$argVariables$returnCode\n})"
                     (Ident(TermName(name)), List(c.parse(codeString)))
                 }
                 case Block(exprs, expr) => {
