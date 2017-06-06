@@ -3,7 +3,7 @@ package expr
 import expr.element.core._
 import expr.element._
 
-sealed trait LuaExpr[+T]
+trait LuaExpr[+T]
 
 case class SDExprVariable[T <: SDType](name: String) extends LuaExpr[T]
 case class SDJustDouble(value: Double) extends LuaExpr[double]

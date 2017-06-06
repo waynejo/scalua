@@ -2,6 +2,8 @@ import expr.{LuaExpr, SDExprReturn, SDFunction2}
 import expr.element.core._
 import expr.element.double
 
+import scala.reflect.api.Trees
+
 object Converter {
     import scala.language.experimental.macros
     import scala.reflect.macros.whitebox.Context
@@ -43,11 +45,7 @@ object Converter {
                             s"val $paramName = SDExprVariable[${showCode(paramTpt)}](" + "\"" + paramName + "\")\n"
                         }
                     }).mkString
-                    val convertedCode = convertCode(rhs)._1
-                    val returnCode = convertedCode match {
-                        case exprTree @ Apply(Ident(TermName("SDExprReturn")), _) => exprTree.toString()
-                        case exprTree => s"SDExprReturn($exprTree)"
-                    }
+                    val returnCode = s"SDExprReturn(${convertCode(rhs)._1})"
                     val codeString = s"val $name = SDFunction$argNum[$functionArgTypes]($functionArgNames, {\n$argVariables$returnCode\n})"
                     (Ident(TermName(name)), List(c.parse(codeString)))
                 }
@@ -58,8 +56,38 @@ object Converter {
                 case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("bool2Bool")), List(tree)) => {
                     (convertCode(tree)._1, Nil)
                 }
+                case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("expr2bool")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
                 case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("expr2double")), List(tree)) => {
-                    (q"SDExprReturn(${convertCode(tree)._1})", Nil)
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("expr2string")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("bool2expr")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("double2expr")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("ExprImplicits")), TermName("string2expr")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("doubleDummyValue")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("doubleDummyValue")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(Select(Select(Select(Ident(TermName("expr")), TermName("element")), TermName("LuaOperatorImplicits")), TermName("doubleDummyValue")), List(tree)) => {
+                    (q"${convertCode(tree)._1}", Nil)
+                }
+                case Apply(fun, args) => {
+                    (Apply(convertCode(fun)._1, args.map(tree => convertCode(tree)._1)), Nil)
+                }
+                case Select(qualifier, name) => {
+                    (Select(convertCode(qualifier)._1, name), Nil)
                 }
                 case expr => (expr, Nil)
             }
