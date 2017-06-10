@@ -14,6 +14,7 @@ object LuaPrinter {
             case SDJustDouble(value) => s"$value"
             case SDJustBool(value) => s"$value"
             case SDJustString(value) => "\"" + value + "\""
+            case SDJustTable(values) => "{" + values.map { case (key, value) => s"[${print(key)}] = ${print(value)}" }.mkString(", ") + "}"
             case SDExprAdd(one, another) => s"${print(one)} + ${print(another)}"
             case SDExprSub(one, another) => s"${print(one)} - ${print(another)}"
             case SDExprMul(one, another) => s"${print(one)} * ${print(another)}"
