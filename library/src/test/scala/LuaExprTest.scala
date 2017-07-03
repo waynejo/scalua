@@ -49,4 +49,13 @@ class LuaExprTest extends FunSuite {
               |end
               |""".stripMargin)
     }
+
+    test("define table") {
+        assert(LuaPrinter.print(
+            SDJustTable[string](List(
+                string("a") -> string("apple"),
+                string("b") -> string("banana")
+            ))) ==
+            """{["a"] = "apple", ["b"] = "banana"}""".stripMargin)
+    }
 }

@@ -107,4 +107,17 @@ class LuaDemoExprTest extends FunSuite {
               |end
               |sum(1.0, 2.0)""".stripMargin.replace("\r\n", "\n"))
     }
+
+    test("define table and assign to variable") {
+        assert(LuaPrinter.print(Converter.convert{
+            val test = Var[Table[string]]()
+            test := Table[string](List(
+                string("a") -> string("apple"),
+                string("b") -> string("banana")
+            ))
+        }) ==
+            """local test
+              |test = {["a"] = "apple", ["b"] = "banana"}
+              |""".stripMargin.replace("\r\n", "\n"))
+    }
 }
