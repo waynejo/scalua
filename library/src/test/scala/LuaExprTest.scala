@@ -1,6 +1,7 @@
-import expr.{SDExprReturn, SDFunction2}
+import expr.{SDDefineFunction, SDExprReturn, SDFunction2, SDJustTable}
 import expr.element.{Var, bool, double, string}
 import expr.element.LuaOperatorImplicits._
+import expr.element.core.SDType
 import org.scalatest._
 
 class LuaExprTest extends FunSuite {
@@ -43,7 +44,7 @@ class LuaExprTest extends FunSuite {
     }
 
     test("define function") {
-        assert(LuaPrinter.print(SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0) + double(1)))) ==
+        assert(LuaPrinter.print(SDDefineFunction(SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0) + double(1))))) ==
             """function testFunc(v0, v1)
               |    return 0.0 + 1.0
               |end
@@ -57,5 +58,16 @@ class LuaExprTest extends FunSuite {
                 string("b") -> string("banana")
             ))) ==
             """{["a"] = "apple", ["b"] = "banana"}""".stripMargin)
+    }
+
+    test("define table with function") {
+        val testFunc = SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0)))
+
+        assert(LuaPrinter.print(
+            SDJustTable[SDType](List(
+                string("variable") -> string("apple"),
+                string("func") -> testFunc
+            ))) ==
+            """{["variable"] = "apple", ["func"] = testFunc}""".stripMargin)
     }
 }

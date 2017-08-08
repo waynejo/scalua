@@ -30,16 +30,20 @@ case class SDExprReturn[T <: SDType](value: LuaExpr[T]) extends LuaStatement
 case class SDExprJust[T <: SDType](value: LuaExpr[T]) extends LuaStatement
 case class SDExprValDef(name: String) extends LuaStatement
 case class SDExprBlock(value: List[LuaExpr[SDType]]) extends LuaStatement
+case class SDDefineFunction[T <: LuaFunction](function: T) extends LuaStatement
 
 sealed trait LuaFunction {
     def name(): String
 }
+trait LuaFunction0[R <: SDType] extends SDType with LuaFunction
+trait LuaFunction1[T0 <: SDType, R <: SDType] extends SDType with LuaFunction
+trait LuaFunction2[T0 <: SDType, T1 <: SDType, R <: SDType] extends SDType with LuaFunction
 
-case class SDVoidFunction(name: String, body: LuaStatement) extends LuaExpr[Unit] with LuaFunction {
+case class SDVoidFunction(name: String, body: LuaStatement) extends LuaExpr[LuaFunction0[Unit]] with LuaFunction {
     def apply(): SDExprJust[Unit] = SDExprJust(SDExprFuncCall[Unit](this))
 }
 
-case class SDFunction0[R <: SDType](name: String, result: SDExprReturn[R]) extends LuaExpr[R] with LuaFunction {
+case class SDFunction0[R <: SDType](name: String, result: SDExprReturn[R]) extends LuaExpr[LuaFunction0[R]] with LuaFunction {
     def apply(): SDExprFuncCall[R] = SDExprFuncCall[R](this)
 }
 

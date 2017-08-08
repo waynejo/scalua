@@ -47,7 +47,8 @@ object Converter {
                     }).mkString
                     val returnCode = s"SDExprReturn(${convertCode(rhs)._1})"
                     val codeString = s"val $name = SDFunction$argNum[$functionArgTypes]($functionArgNames, {\n$argVariables$returnCode\n})"
-                    (Ident(TermName(name)), List(c.parse(codeString)))
+                    val defineCodeString = s"SDDefineFunction($name)"
+                    (c.parse(defineCodeString), List(c.parse(codeString)))
                 }
                 case Block(exprs, expr) => {
                     val tuples = exprs.map(x => convertCode(x)) :+ convertCode(expr)

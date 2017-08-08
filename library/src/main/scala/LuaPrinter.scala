@@ -1,4 +1,4 @@
-import expr._
+import expr.{LuaFunction, _}
 import expr.element.Var
 import expr.element.core.{SDType, Unit}
 
@@ -6,6 +6,16 @@ object LuaPrinter {
 
     def addIndent(text: String): String = {
         text.split("\n").map("    " + _).mkString("\n") + "\n"
+    }
+
+    private def printDefinedFunction[T](expr: LuaFunction): String = {
+        expr match {
+            case SDVoidFunction(name: String, body: LuaStatement) => s"function $name()\n${addIndent(print(body))}end\n"
+            case SDFunction0(name: String, result: SDExprReturn[_]) => s"function $name()\n${addIndent(print(result))}end\n"
+            case SDFunction1(name: String, arg0: String, result: SDExprReturn[_]) => s"function $name($arg0)\n${addIndent(print(result))}end\n"
+            case SDFunction2(name: String, arg0: String, arg1: String, result: SDExprReturn[_]) => s"function $name($arg0, $arg1)\n${addIndent(print(result))}end\n"
+            case _ => "Error : " + expr
+        }
     }
 
     def print[T](expr: LuaExpr[T]): String = {
@@ -32,10 +42,8 @@ object LuaPrinter {
             case SDExprReturn(value) => s"return ${print(value)}\n"
             case SDExprValDef(name: String) => s"local $name\n"
             case SDExprBlock(value: List[LuaExpr[SDType]]) => value.map(print).mkString("")
-            case SDVoidFunction(name: String, body: LuaStatement) => s"function $name()\n${addIndent(print(body))}end\n"
-            case SDFunction0(name: String, result: SDExprReturn[_]) => s"function $name()\n${addIndent(print(result))}end\n"
-            case SDFunction1(name: String, arg0: String, result: SDExprReturn[_]) => s"function $name($arg0)\n${addIndent(print(result))}end\n"
-            case SDFunction2(name: String, arg0: String, arg1: String, result: SDExprReturn[_]) => s"function $name($arg0, $arg1)\n${addIndent(print(result))}end\n"
+            case SDDefineFunction(function: LuaFunction) => printDefinedFunction(function)
+            case function: LuaFunction => function.name()
             case value: Var[_] => value.name
             case _ => "Error : " + expr
         }
