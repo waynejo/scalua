@@ -1,6 +1,4 @@
-import expr.{LuaFunction, _}
-import expr.element.Var
-import expr.element.core.{SDType, Unit}
+import expr._
 
 object LuaPrinter {
 
@@ -8,48 +6,82 @@ object LuaPrinter {
         text.split("\n").map("    " + _).mkString("\n") + "\n"
     }
 
-    private def printDefinedFunction[T](expr: LuaFunction): String = {
+    def printDefParams(expr: LuaExpr): String = {
         expr match {
-            case SDVoidFunction(name: String, body: LuaStatement) => s"function $name()\n${addIndent(print(body))}end\n"
-            case SDFunction0(name: String, result: SDExprReturn[_]) => s"function $name()\n${addIndent(print(result))}end\n"
-            case SDFunction1(name: String, arg0: String, result: SDExprReturn[_]) => s"function $name($arg0)\n${addIndent(print(result))}end\n"
-            case SDFunction2(name: String, arg0: String, arg1: String, result: SDExprReturn[_]) => s"function $name($arg0, $arg1)\n${addIndent(print(result))}end\n"
-            case _ => "Error : " + expr
+            case LuaValDef(name: String, LuaEmptyTree()) =>
+                name
+            case LuaValDef(name: String, value: LuaExpr) =>
+                s"$name = ${print(value)}"
+            case _ =>
+                print(expr)
         }
     }
 
-    def print[T](expr: LuaExpr[T]): String = {
+    def printDefBody(expr: LuaExpr): String = {
         expr match {
-            case SDExprVariable(name: String) => s"$name"
-            case SDJustDouble(value) => s"$value"
-            case SDJustBool(value) => s"$value"
-            case SDJustString(value) => "\"" + value + "\""
-            case SDJustTable(values) => "{" + values.map { case (key, value) => s"[${print(key)}] = ${print(value)}" }.mkString(", ") + "}"
-            case SDExprAdd(one, another) => s"${print(one)} + ${print(another)}"
-            case SDExprSub(one, another) => s"${print(one)} - ${print(another)}"
-            case SDExprMul(one, another) => s"${print(one)} * ${print(another)}"
-            case SDExprDiv(one, another) => s"${print(one)} / ${print(another)}"
-            case SDExprAnd(one, another) => s"${print(one)} and ${print(another)}"
-            case SDExprOr(one, another) => s"${print(one)} or ${print(another)}"
-            case SDExprNot(value) => s"not ${print(value)}"
-            case SDExprStrAdd(one, another) => s"${print(one)} .. ${print(another)}"
-            case SDExprFuncCall(value: LuaFunction, args: Vector[LuaExpr[SDType]]) => s"${value.name()}(${args.map(print).mkString(", ")})"
-            case SDNone() => ""
-            case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaExpr[SDType], ifFalse: SDNone) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}end\n"
-            case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaExpr[SDType], ifFalse: SDExprIF) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}else${print(ifFalse)}\n"
-            case SDExprIF(condition: LuaExpr[bool], ifTrue: LuaExpr[SDType], ifFalse: LuaExpr[SDType]) => s"if ${print(condition)} then\n${addIndent(print(ifTrue))}else\n${addIndent(print(ifFalse))}end\n"
-            case SDExprAssign(variable: SDExprVariable[SDType], expr: LuaExpr[_]) => s"${print(variable)} = ${print(expr)}\n"
-            case SDExprReturn(value) => s"return ${print(value)}\n"
-            case SDExprValDef(name: String) => s"local $name\n"
-            case SDExprBlock(value: List[LuaExpr[SDType]]) => value.map(print).mkString("")
-            case SDDefineFunction(function: LuaFunction) => printDefinedFunction(function)
-            case function: LuaFunction => function.name()
-            case value: Var[_] => value.name
-            case _ => "Error : " + expr
+            case LuaBlock(exprs, expr) =>
+                (exprs.map(print) :+ print(expr)).mkString("\n")
+            case LuaEmptyTree() =>
+                ""
+            case _ =>
+                s"return ${print(expr)}"
         }
     }
 
-    def asString(expr: LuaStatement): String = {
+    def print(expr: LuaExpr): String = {
+        expr match {
+            case LuaBlock(exprs, lastExpr) =>
+                (exprs :+ lastExpr).map(print).mkString("\n")
+            case LuaIdent(v0) =>
+                s"$v0"
+            case LuaBoolConstant(v0) =>
+                s"$v0"
+            case LuaDoubleConstant(v0) =>
+                s"$v0"
+            case LuaStringConstant(v0) =>
+                s""""${v0.replace("\\", "\\\\").replace("\"", "\\\"")}""""
+            case LuaApply(LuaSelect(v0, "$amp$amp"), List(v1)) =>
+                s"${print(v0)} and ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$bar$bar"), List(v1)) =>
+                s"${print(v0)} or ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$plus"), List(v1)) =>
+                s"${print(v0)} + ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$plusString"), List(v1)) =>
+                s"${print(v0)} .. ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$minus"), List(v1)) =>
+                s"${print(v0)} - ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$times"), List(v1)) =>
+                s"${print(v0)} * ${print(v1)}"
+            case LuaApply(LuaSelect(v0, "$div"), List(v1)) =>
+                s"${print(v0)} / ${print(v1)}"
+            case LuaApply(v0, v1:List[LuaExpr]) =>
+                s"${print(v0)}(${v1.map(print).mkString(", ")})"
+            case LuaSelect(v0, "unary_$bang") =>
+                s"not ${print(v0)}"
+            case LuaValDef(name: String, LuaEmptyTree()) =>
+                s"local $name"
+            case LuaValDef(name: String, value: LuaExpr) =>
+                s"local $name = ${print(value)}"
+            case LuaDef(defName: String, params:List[LuaExpr], body:LuaExpr) =>
+                s"""function $defName(${params.map(printDefParams).mkString(", ")})
+                   |${printDefBody(body).split("\n").map("    " + _).mkString("\n")}
+                   |end""".stripMargin
+            case LuaIf(cond, thenp, LuaEmptyTree()) =>
+                s"""if ${print(cond)} then
+                   |${print(thenp).split("\n").map("    " + _).mkString("\n")}
+                   |end""".stripMargin
+            case LuaIf(cond, thenp, elsep) =>
+                s"""if ${print(cond)} then
+                   |${print(thenp).split("\n").map("    " + _).mkString("\n")}
+                   |else
+                   |${print(elsep).split("\n").map("    " + _).mkString("\n")}
+                   |end""".stripMargin
+            case _ =>
+                "Error : " + expr
+        }
+    }
+
+    def asString(expr: LuaExpr): String = {
         print(expr)
     }
 }

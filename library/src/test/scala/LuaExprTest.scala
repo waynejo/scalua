@@ -1,73 +1,50 @@
-import expr.{SDDefineFunction, SDExprReturn, SDFunction2, SDJustTable}
-import expr.element.{Var, bool, double, string}
-import expr.element.LuaOperatorImplicits._
-import expr.element.core.SDType
+
+import expr._
 import org.scalatest._
 
 class LuaExprTest extends FunSuite {
 
     test("test bool && operation") {
-        assert(LuaPrinter.print(bool(true) && bool(false)) == "true and false")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaBoolConstant(true), "$amp$amp"), List(LuaBoolConstant(false)))) == "true and false")
     }
 
     test("test bool || operation") {
-        assert(LuaPrinter.print(bool(true) || bool(false)) == "true or false")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaBoolConstant(true), "$bar$bar"), List(LuaBoolConstant(false)))) == "true or false")
     }
 
     test("test bool ! operation") {
-        assert(LuaPrinter.print(!bool(true)) == "not true")
+        assert(LuaPrinter.print(LuaSelect(LuaBoolConstant(true), "unary_$bang")) == "not true")
     }
 
     test("test double + operation") {
-        assert(LuaPrinter.print(double(1.0) + double(2.0)) == "1.0 + 2.0")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaDoubleConstant(1.0), "$plus"), List(LuaDoubleConstant(2.0)))) == "1.0 + 2.0")
     }
 
     test("test double - operation") {
-        assert(LuaPrinter.print(double(1.0) - double(2.0)) == "1.0 - 2.0")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaDoubleConstant(1.0), "$minus"), List(LuaDoubleConstant(2.0)))) == "1.0 - 2.0")
     }
 
     test("test double * operation") {
-        assert(LuaPrinter.print(double(1.0) * double(2.0)) == "1.0 * 2.0")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaDoubleConstant(1.0), "$times"), List(LuaDoubleConstant(2.0)))) == "1.0 * 2.0")
     }
 
     test("test double / operation") {
-        assert(LuaPrinter.print(double(1.0) / double(2.0)) == "1.0 / 2.0")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaDoubleConstant(1.0), "$div"), List(LuaDoubleConstant(2.0)))) == "1.0 / 2.0")
     }
 
     test("test string + operation") {
-        assert(LuaPrinter.print(string("Hello ") + string("world")) == "\"Hello \" .. \"world\"")
+        assert(LuaPrinter.print(LuaApply(LuaSelect(LuaStringConstant("Hello "), "$plusString"), List(LuaStringConstant("world")))) == "\"Hello \" .. \"world\"")
     }
 
     test("calling function") {
-        val testFunc = SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0)))
-        assert(LuaPrinter.print(testFunc(double(0) + double(1), testFunc(double(2), double(3)))) == "testFunc(0.0 + 1.0, testFunc(2.0, 3.0))")
+        val testCode = LuaApply(LuaIdent("testFunc"), List(LuaApply(LuaSelect(LuaDoubleConstant(0.0), "$plus"), List(LuaDoubleConstant(1.0))), LuaApply(LuaIdent("testFunc"), List(LuaDoubleConstant(2.0), LuaDoubleConstant(3.0)))))
+        assert(LuaPrinter.print(testCode) == "testFunc(0.0 + 1.0, testFunc(2.0, 3.0))")
     }
 
     test("define function") {
-        assert(LuaPrinter.print(SDDefineFunction(SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0) + double(1))))) ==
+        assert(LuaPrinter.print(LuaDef("testFunc", List(LuaValDef("v0", LuaEmptyTree()), LuaValDef("v1", LuaEmptyTree())), LuaApply(LuaSelect(LuaDoubleConstant(0.0), "$plus"), List(LuaDoubleConstant(1.0))))) ==
             """function testFunc(v0, v1)
               |    return 0.0 + 1.0
-              |end
-              |""".stripMargin)
-    }
-
-    test("define table") {
-        assert(LuaPrinter.print(
-            SDJustTable[string](List(
-                string("a") -> string("apple"),
-                string("b") -> string("banana")
-            ))) ==
-            """{["a"] = "apple", ["b"] = "banana"}""".stripMargin)
-    }
-
-    test("define table with function") {
-        val testFunc = SDFunction2[double, double, double]("testFunc", "v0", "v1", SDExprReturn(double(0)))
-
-        assert(LuaPrinter.print(
-            SDJustTable[SDType](List(
-                string("variable") -> string("apple"),
-                string("func") -> testFunc
-            ))) ==
-            """{["variable"] = "apple", ["func"] = testFunc}""".stripMargin)
+              |end""".stripMargin)
     }
 }
