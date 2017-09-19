@@ -30,6 +30,8 @@ object LuaPrinter {
 
     def print(expr: LuaExpr): String = {
         expr match {
+            case LuaEmptyTree() =>
+                ""
             case LuaBlock(exprs, lastExpr) =>
                 (exprs :+ lastExpr).map(print).mkString("\n")
             case LuaIdent(v0) =>

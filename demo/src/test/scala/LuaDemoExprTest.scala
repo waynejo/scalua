@@ -5,7 +5,7 @@ import expr._
 class LuaDemoExprTest extends FunSuite {
 
     test("if statement") {
-        assert(LuaPrinter.print(Converter.convert{
+        assert(LuaPrinter.print(Converter.convert {
             val x = true
             val y = false
             if (x && y) {
@@ -20,7 +20,7 @@ class LuaDemoExprTest extends FunSuite {
     }
 
     test("if else statement") {
-        assert(LuaPrinter.print(Converter.convert{
+        assert(LuaPrinter.print(Converter.convert {
             val x = true
             val y = false
             if (x && y) {
@@ -57,4 +57,16 @@ class LuaDemoExprTest extends FunSuite {
               |end""".stripMargin.replace("\r\n", "\n"))
     }
 
+
+    test("define function") {
+        assert(LuaPrinter.print(Converter.convert {
+            def myCustomFunc(a: Float, b: Float): Float = {
+                0.0f
+            }
+        }) ==
+            """function myCustomFunc(a, b)
+              |    return 0.0
+              |end
+              |""".stripMargin.replace("\r\n", "\n"))
+    }
 }

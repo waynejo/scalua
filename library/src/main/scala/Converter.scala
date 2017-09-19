@@ -15,6 +15,16 @@ object Converter {
             println(showRaw(code))
 
             code match {
+                case Literal(Constant(())) =>
+                    c.parse(s"""LuaEmptyTree()""")
+                case Literal(Constant(value)) if c.Expr[Any](c.typecheck(code)).actualType.typeSymbol.fullName == "scala.Float" =>
+                    c.parse(s"""LuaDoubleConstant($value)""")
+                case Literal(Constant(value)) if c.Expr[Any](c.typecheck(code)).actualType.typeSymbol.fullName == "scala.Double" =>
+                    c.parse(s"""LuaDoubleConstant($value)""")
+                case EmptyTree =>
+                    c.parse(s"""LuaEmptyTree()""")
+                case DefDef(mods, TermName(name), tparams, List(vparamss), tpt, rhs) =>
+                    c.parse(s"""LuaDef("$name", List(${vparamss.map(convertCode(_)).mkString(", ")}), ${convertCode(rhs)})""")
                 case Literal(Constant(value: Boolean)) =>
                     c.parse(s"""LuaBoolConstant($value)""")
                 case Ident(TermName(name)) =>
