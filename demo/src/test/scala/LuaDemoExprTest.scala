@@ -69,4 +69,35 @@ class LuaDemoExprTest extends FunSuite {
               |end
               |""".stripMargin.replace("\r\n", "\n"))
     }
+
+    test("call function in another function") {
+        assert(LuaPrinter.print(Converter.convert {
+            def functionA(a: Double, b: Double): Double = {
+                0.0
+            }
+            def functionB(a: Double, b: Double): Double = {
+                functionA(a, b)
+            }
+        }) ==
+            """function functionA(a, b)
+              |    return 0.0
+              |end
+              |function functionB(a, b)
+              |    return functionA(a, b)
+              |end
+              |""".stripMargin.replace("\r\n", "\n"))
+    }
+
+    test("use simple operation in function") {
+        assert(LuaPrinter.print(Converter.convert{
+            def sum(a: Double, b: Double): Double = {
+                a + b
+            }
+            sum(1.0, 2.0)
+        }) ==
+            """function sum(a, b)
+              |    return a + b
+              |end
+              |sum(1.0, 2.0)""".stripMargin.replace("\r\n", "\n"))
+    }
 }
