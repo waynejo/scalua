@@ -13,5 +13,6 @@ case class LuaDoubleConstant(value: Double) extends LuaExpr
 case class LuaStringConstant(value: String) extends LuaExpr
 case class LuaIdentConstant(ident: String) extends LuaExpr
 case class LuaValDef(name: String, value: LuaExpr) extends LuaExpr
-case class LuaClassDef(value: LuaExpr) extends LuaExpr
+case class LuaAssign(lhs: LuaExpr, rhs: LuaExpr) extends LuaExpr
+case class LuaClassDef(name: String, value: List[LuaExpr]) extends LuaExpr
 case class LuaEmptyTree() extends LuaExpr

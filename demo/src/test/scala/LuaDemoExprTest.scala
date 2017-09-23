@@ -100,4 +100,33 @@ class LuaDemoExprTest extends FunSuite {
               |end
               |sum(1.0, 2.0)""".stripMargin.replace("\r\n", "\n"))
     }
+
+    test("define class") {
+        assert(LuaPrinter.print(Converter.convert{
+            class Test(abc: Int) {
+                def hi(): Int = {
+                    variable
+                }
+
+                var variable = 10
+            }
+        }) ==
+            """Test = {}
+              |function Test.__init__()
+              |    this = {}
+              |    this.abc = nil
+              |    this.__init__ = function(this, abc)
+              |        if super ~= nil then
+              |            super.__init__()
+              |        end
+              |
+              |    end
+              |    this.hi = function(this)
+              |        return this.variable
+              |    end
+              |    this.variable  = 10.0
+              |    return this
+              |end
+              |""".stripMargin.replace("\r\n", "\n"))
+    }
 }

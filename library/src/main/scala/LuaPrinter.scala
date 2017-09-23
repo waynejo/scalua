@@ -1,9 +1,22 @@
 import expr._
 
 object LuaPrinter {
+    val INITIALIZER = "<init>"
 
     def addIndent(text: String): String = {
-        text.split("\n").map("    " + _).mkString("\n") + "\n"
+        text.split("\n").map(s => rtrim("    " + s)).mkString("\n")
+    }
+
+    def rtrim(s: String) = s.replaceAll("\\s+$", "")
+
+
+    def selectingName(name: String): String = {
+        name match {
+            case INITIALIZER =>
+                "__init__"
+            case _ =>
+                name
+        }
     }
 
     def printDefParams(expr: LuaExpr): String = {
@@ -28,12 +41,27 @@ object LuaPrinter {
         }
     }
 
+    def printClassBody(expr: LuaExpr): String = {
+        expr match {
+            case LuaValDef(name: String, LuaEmptyTree()) =>
+                s"this.$name = nil"
+            case LuaValDef(name: String, value: LuaExpr) =>
+                s"this.$name = ${print(value)}"
+            case LuaDef(defName: String, params:List[LuaExpr], body:LuaExpr) =>
+                s"""this.${selectingName(defName)} = function(${("this" +: params.map(printDefParams)).mkString(", ")})
+                   |${addIndent(printDefBody(body))}
+                   |end""".stripMargin
+            case _ =>
+                print(expr)
+        }
+    }
+
     def print(expr: LuaExpr): String = {
         expr match {
             case LuaEmptyTree() =>
                 ""
             case LuaBlock(exprs, lastExpr) =>
-                (exprs :+ lastExpr).map(print).mkString("\n")
+                (exprs :+ lastExpr).map(print).map(rtrim).mkString("\n")
             case LuaIdent(v0) =>
                 s"$v0"
             case LuaBoolConstant(v0) =>
@@ -56,28 +84,45 @@ object LuaPrinter {
                 s"${print(v0)} * ${print(v1)}"
             case LuaApply(LuaSelect(v0, "$div"), List(v1)) =>
                 s"${print(v0)} / ${print(v1)}"
+            case LuaApply(v0 @ LuaSelect(LuaIdent("super"), INITIALIZER), v1) =>
+                s"""if super ~= nil then
+                   |    ${print(v0)}(${v1.map(print).mkString(", ")})
+                   |end
+                 """.stripMargin
             case LuaApply(v0, v1:List[LuaExpr]) =>
                 s"${print(v0)}(${v1.map(print).mkString(", ")})"
+            case LuaAssign(lhs, rhs) =>
+                s"${print(lhs)} = ${print(rhs)}"
             case LuaSelect(v0, "unary_$bang") =>
                 s"not ${print(v0)}"
+            case LuaSelect(v0, v1) =>
+                s"${print(v0)}.${selectingName(v1)}"
             case LuaValDef(name: String, LuaEmptyTree()) =>
                 s"local $name"
             case LuaValDef(name: String, value: LuaExpr) =>
                 s"local $name = ${print(value)}"
             case LuaDef(defName: String, params:List[LuaExpr], body:LuaExpr) =>
                 s"""function $defName(${params.map(printDefParams).mkString(", ")})
-                   |${printDefBody(body).split("\n").map("    " + _).mkString("\n")}
+                   |${addIndent(printDefBody(body))}
                    |end""".stripMargin
             case LuaIf(cond, thenp, LuaEmptyTree()) =>
                 s"""if ${print(cond)} then
-                   |${print(thenp).split("\n").map("    " + _).mkString("\n")}
+                   |${addIndent(print(thenp))}
                    |end""".stripMargin
             case LuaIf(cond, thenp, elsep) =>
                 s"""if ${print(cond)} then
-                   |${print(thenp).split("\n").map("    " + _).mkString("\n")}
+                   |${addIndent(print(thenp))}
                    |else
-                   |${print(elsep).split("\n").map("    " + _).mkString("\n")}
+                   |${addIndent(print(elsep))}
                    |end""".stripMargin
+            case LuaClassDef(name, value) =>
+                s"""$name = {}
+                   |function $name.__init__()
+                   |    this = {}
+                   |${addIndent(value.map(printClassBody).filter(_.nonEmpty).mkString("\n"))}
+                   |    return this
+                   |end
+                 """.stripMargin
             case _ =>
                 "Error : " + expr
         }
