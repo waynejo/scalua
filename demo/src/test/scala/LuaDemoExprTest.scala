@@ -113,20 +113,42 @@ class LuaDemoExprTest extends FunSuite {
         }) ==
             """Test = {}
               |function Test.__init__()
-              |    this = {}
-              |    this.abc = nil
-              |    this.__init__ = function(this, abc)
+              |    class = {}
+              |    class.abc = nil
+              |    class.__init__ = function(this, abc)
               |        if super ~= nil then
-              |            super.__init__()
+              |            super:__init__()
               |        end
               |
               |    end
-              |    this.hi = function(this)
+              |    class.hi = function(this)
               |        return this.variable
               |    end
-              |    this.variable  = 10.0
-              |    return this
+              |    class.variable  = 10.0
+              |    return class
               |end
               |""".stripMargin.replace("\r\n", "\n"))
+    }
+
+    test("call class function") {
+        object Test {
+            def hi(): Int = {
+                0
+            }
+        }
+
+        class Test() {
+            def hi(): Int = {
+                0
+            }
+        }
+        val x = new Test()
+
+        assert(LuaPrinter.print(Converter.convert {
+            x.hi()
+            Test.hi()
+        }) ==
+            """x:hi()
+              |Test.hi()""".stripMargin.replace("\r\n", "\n"))
     }
 }

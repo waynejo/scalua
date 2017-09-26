@@ -44,11 +44,11 @@ object LuaPrinter {
     def printClassBody(expr: LuaExpr): String = {
         expr match {
             case LuaValDef(name: String, LuaEmptyTree()) =>
-                s"this.$name = nil"
+                s"class.$name = nil"
             case LuaValDef(name: String, value: LuaExpr) =>
-                s"this.$name = ${print(value)}"
+                s"class.$name = ${print(value)}"
             case LuaDef(defName: String, params:List[LuaExpr], body:LuaExpr) =>
-                s"""this.${selectingName(defName)} = function(${("this" +: params.map(printDefParams)).mkString(", ")})
+                s"""class.${selectingName(defName)} = function(${("this" +: params.map(printDefParams)).mkString(", ")})
                    |${addIndent(printDefBody(body))}
                    |end""".stripMargin
             case _ =>
@@ -84,17 +84,21 @@ object LuaPrinter {
                 s"${print(v0)} * ${print(v1)}"
             case LuaApply(LuaSelect(v0, "$div"), List(v1)) =>
                 s"${print(v0)} / ${print(v1)}"
-            case LuaApply(v0 @ LuaSelect(LuaIdent("super"), INITIALIZER), v1) =>
+            case LuaApply(LuaSelect(LuaIdent("super"), INITIALIZER), v0) =>
                 s"""if super ~= nil then
-                   |    ${print(v0)}(${v1.map(print).mkString(", ")})
+                   |    ${print(LuaIdent("super"))}:${selectingName(INITIALIZER)}(${v0.map(print).mkString(", ")})
                    |end
                  """.stripMargin
+            case LuaApply(LuaSelect(v0, v1), v2:List[LuaExpr]) =>
+                s"${print(v0)}:${selectingName(v1)}(${v2.map(print).mkString(", ")})"
             case LuaApply(v0, v1:List[LuaExpr]) =>
                 s"${print(v0)}(${v1.map(print).mkString(", ")})"
             case LuaAssign(lhs, rhs) =>
                 s"${print(lhs)} = ${print(rhs)}"
             case LuaSelect(v0, "unary_$bang") =>
                 s"not ${print(v0)}"
+            case LuaStaticSelect(v0, v1) =>
+                s"${print(v0)}.${selectingName(v1)}"
             case LuaSelect(v0, v1) =>
                 s"${print(v0)}.${selectingName(v1)}"
             case LuaValDef(name: String, LuaEmptyTree()) =>
@@ -118,9 +122,9 @@ object LuaPrinter {
             case LuaClassDef(name, value) =>
                 s"""$name = {}
                    |function $name.__init__()
-                   |    this = {}
+                   |    class = {}
                    |${addIndent(value.map(printClassBody).filter(_.nonEmpty).mkString("\n"))}
-                   |    return this
+                   |    return class
                    |end
                  """.stripMargin
             case _ =>

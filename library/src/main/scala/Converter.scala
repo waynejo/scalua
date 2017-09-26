@@ -52,7 +52,11 @@ object Converter {
                 case Apply(fun, args) =>
                     c.parse(s"LuaApply(${convertCode(fun)}, List(${args.map(convertCode(_)).mkString(", ")}))")
                 case Select(qualifier, name) =>
-                    c.parse(s"""LuaSelect(${convertCode(qualifier)}, "$name")""")
+                    if (qualifier.symbol.isModule) {
+                        c.parse(s"""LuaStaticSelect(${convertCode(qualifier)}, "$name")""")
+                    } else {
+                        c.parse(s"""LuaSelect(${convertCode(qualifier)}, "$name")""")
+                    }
                 case Block(exprs, expr) =>
                     c.parse(s"LuaBlock(List(${exprs.map(convertCode(_)).mkString(", ")}), ${convertCode(expr)})")
                 case _ =>
